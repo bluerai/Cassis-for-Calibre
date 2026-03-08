@@ -1,6 +1,6 @@
 'use strict';
 
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'better-sqlite3';
 import fs from 'fs-extra';
 import { logger, errorLogger } from '../log.js';
 
@@ -11,8 +11,15 @@ if (!fs.existsSync(CASSIS_METADATA)) {
   process.exit(1);
 }
 
-const METADATA_DB = new DatabaseSync(CASSIS_METADATA, { open: true });
-if (METADATA_DB) logger.info("Connected to Calibre Database at " + CASSIS_METADATA)
+let METADATA_DB;
+let COVERDATA_STMT;
+
+function initDb() {
+  if (!METADATA_DB) {
+    METADATA_DB = new Database(CASSIS_METADATA, { readonly: true });
+    logger.info("Connected to Calibre Database at " + CASSIS_METADATA);
+  }
+}
 
 // SQL 
 const bookColumns = ' b.id as bookId, b.title, b.sort, b.timestamp, b.pubdate, b.timestamp, b.series_index as seriesIndex, b.path ';
@@ -464,8 +471,8 @@ JOIN series s ON s.id = bsl.series
 WHERE s.id = ?;`;
 
 // Global prepared STMTs (for better performance of often used prepared STMTs)
-let COVERDATA_STMT;
 try {
+  initDb();
   COVERDATA_STMT = METADATA_DB.prepare(queryCoverData);
 } catch (error) {
   errorLogger(error);
@@ -475,7 +482,8 @@ try {
 // Exported functions **************************************
 export function connectDb() {  // open database 
   try {
-    METADATA_DB.open();
+    initDb();
+    if (!COVERDATA_STMT) COVERDATA_STMT = METADATA_DB.prepare(queryCoverData);
     logger.info("connectDb: DB opened");
     return { state: true, msg: "Calibre Database connected." }
   } catch (error) {
@@ -485,8 +493,12 @@ export function connectDb() {  // open database
 
 export function unconnectDb() {  // close database 
   try {
-    METADATA_DB.close();
-    logger.warn("unconnectDb: DB closed");
+    if (METADATA_DB) {
+      METADATA_DB.close();
+      METADATA_DB = null;
+      COVERDATA_STMT = null;
+      logger.warn("unconnectDb: DB closed");
+    }
     return { state: true, msg: "Calibre Database closed" }
   } catch (error) {
     return { state: false, msg: error.message };
