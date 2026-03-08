@@ -6,7 +6,9 @@ import { join } from 'path';
 
 import { createSignature, verifySignature } from '../auth/index.js'
 import { logger, consoleTransport, fileTransport, errorLogger, log_levels } from '../log.js';
-import packagejson from '../package.json' with {type: 'json'}
+
+const packagejson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+
 import {
   findBooks, countBooks, findBooksWithTags, countBooksWithTags, findBooksWithCC, countBooksWithCC, findBooksBySerie, countBooksBySerie,
   findBooksByAuthor, countBooksByAuthor, getSeriesOfBooks, getAuthorsOfBooks, getFormatsOfBooks, getPublisherOfBooks, getTagsOfBooks, getBook,
