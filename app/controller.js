@@ -106,6 +106,7 @@ export async function startAction(request, response) {
 export async function listAction(request, response) {
   try {
     const options = request.body;
+    logger.debug("*** listAction: request.params=" + JSON.stringify(request.params));
     logger.debug("*** listAction: options=" + JSON.stringify(options));
 
     const page = (!options.page || isNaN(options.page)) ? 0 : parseInt(options.page, 10);
@@ -150,9 +151,11 @@ export async function listAction(request, response) {
         break;
     }
 
+    response.locals.searchString = options.searchString || "";
+
     if (count <= 0 || books.length === 0) {
       const message = (count === 0) ? "Keine Bücher/Zeitschriften gefunden!" : "Fehler beim Zugriff auf die Datenbank!";
-      response.send({ "html": "<div class='message'><h3>" + message + "</h3></div>" });
+      response.send({ searchString: response.locals.searchString, "html": "<div id='main_message'>" + message + "</div>" });
       return;
     }
 
@@ -166,7 +169,7 @@ export async function listAction(request, response) {
       if (error) {
         errorHandler(error, response, 'render booklist page');
       } else {
-        response.send({ html });
+        response.send({ searchString: response.locals.searchString, html });
       }
     });
   }

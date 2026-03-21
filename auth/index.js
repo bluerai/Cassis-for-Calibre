@@ -132,25 +132,27 @@ function savePasswordAsHash(username, password, users) {
 
 
 export function protect(request, response, next) {
-  //logger.debug("protect: ", request.url, request.body);
+  //console.log("protect: ", request.path);
+  //request.ip, request.connection.remoteAddress);
 
   if ((request.path.startsWith('/cover/')) ||
     (request.path.startsWith('/file/')) ||
+    (request.path.startsWith('/search/')) ||
     request.path === '/' ||
     (verifySignature(request))) {
     return next();
   }
   const token = request.headers.authorization?.split(' ')[1];
-  //logger.debug("protect: path=" + request.path + "; token=" + token);
+  logger.debug("protect: path=" + request.path + "; token=" + token);
 
   if (!token) {
-    logger.debug("No Token !!!");
+    logger.info("protect: No Token !!!");
     return response.status(401).json({ error: 'No Authorisation' });
   }
 
   jwt.verify(token, JWT_KEY, (err, decoded) => {
     if (err) {
-      logger.debug("protect: No Authorisation!");
+      logger.info("protect: No Authorisation!");
       response.status(401).json({ error: 'No Authorisation' });
 
     } else {

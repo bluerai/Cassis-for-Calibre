@@ -10,7 +10,7 @@ async function validate() {
     const data = await response.json();
     switch (response.status) {
       case 200: {
-        displayMessage(': Login "' + data.user.username + '" gültig bis ' + (new Date(data.user.exp * 1000).toLocaleDateString()), 5);
+        displayMessage('Login "' + data.user.username + '" gültig bis ' + (new Date(data.user.exp * 1000).toLocaleDateString()), 5);
         break;
       }
       case 401: {
@@ -172,7 +172,7 @@ function goBack() { historyMove(-1) }
 function goForward() { historyMove(1) }
 
 async function getBooklist(options) {
-  //alert(JSON.stringify(options));
+  console.log(`getBooklist: ${JSON.stringify(options)}`);
   const response = await fetch("/app/list/", {
     method: "POST",
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
@@ -184,10 +184,12 @@ async function getBooklist(options) {
     document.getElementById("booklist").style.display = 'flex';
     document.getElementById("book").style.display = 'none';
     document.getElementById("info").style.display = 'none';
+    document.getElementById("searchInput").value = data.searchString;
     document.body.scrollIntoView();
     restoreOptions();
   } else {
-    responseFail_Handler("getCategory", response);
+    login(false);
+    //responseFail_Handler("getBooklist", response);
   }
 }
 
@@ -223,7 +225,7 @@ function jumpToPosition(position) {
 }
 
 async function getBook(options) {
-  //alert(JSON.stringify(options));
+  console.log(`getBook: ${JSON.stringify(options)}`);
   SCROLL_POSITION = options.scrollPosition || SCROLL_POSITION;
   /*   if (options.oldNum) {
       document.getElementById("app").classList.add((options.oldNum > options.num) ? "swipe-right-transition" : "swipe-left-transition");
@@ -516,7 +518,7 @@ async function sendMail(authors, title, bookId, tagName) {
   const cc = null;
   const bc = null;
   const protocol = window.location.origin;
-  const data = {to, authors, title, bookId, tagName, protocol, cc, bc };
+  const data = { to, authors, title, bookId, tagName, protocol, cc, bc };
 
   const response = await fetch("/app/booklink/", {
     method: 'POST',
@@ -564,8 +566,8 @@ function handleSwipe() {
     } else {
       displayMessage("keine weiteren Daten", 5);
     }
-  } 
-    //else console.log("Notwiped: diffX=" + diffX + ", diffY=" + diffY);
+  }
+  //else console.log("Notwiped: diffX=" + diffX + ", diffY=" + diffY);
 }
 
 function initSwipe() {
@@ -666,6 +668,10 @@ async function docReady(type, id, signature, expires) {
   switch (type) {
     case 'book': {
       getBook({ "bookId": id, "signature": signature || "", "expires": expires || "" });
+      break;
+    }
+    case 'search': {
+      getBooklist({ "type": 'search', "searchString": id });
       break;
     }
     default: {
