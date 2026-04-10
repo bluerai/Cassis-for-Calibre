@@ -10,7 +10,7 @@ import { join } from 'path';
 import { verifyAction, loginAction, protect } from './auth/index.js';
 import { appRouter } from './app/index.js';
 import { apiRouter } from './api/index.js';
-import { logger, log} from './log.js';
+import { log} from './log.js';
 
 const app = express();
 const HTTP_PORT = parseInt(process.env.HTTP_PORT) || 80;
@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(morgan('short', {
   stream: {
     write: (message) => {
-      (!message.includes(' /app/cover/')) && log(message.trim())
+      (!message.includes(' /app/cover/')) && log('\x1b[32m' + message.trim())
     }
   }
 }));
@@ -53,14 +53,14 @@ if (HTTPS_PORT >= 0) {
       cert: fs.readFileSync(certfile),
     };
     https.createServer(options, app).listen(HTTPS_PORT, () => {
-      logger.info(`Https-Server is listening to https://${getLocalIp()}:${HTTPS_PORT}`)
+      log(`Https-Server is listening to https://${getLocalIp()}:${HTTPS_PORT}`)
     });
   }
 }
 
 if (HTTP_PORT >= 0) {
   app.listen(HTTP_PORT, () => {
-    logger.info(`Http-Server is listening to http://${getLocalIp()}:${HTTP_PORT}`)
+    log(`Http-Server is listening to http://${getLocalIp()}:${HTTP_PORT}`)
   })
 }
 
@@ -81,10 +81,10 @@ const getLocalIp = () => {
 function lanOnly(req, res, next) {
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
   if (isPrivateIP(clientIP)) {
-    logger.debug(`lanOnly: LAN access from: ${req.protocol}://${clientIP}`);
+    log.debug(`lanOnly: LAN access from: ${req.protocol}://${clientIP}`);
     return next();
   } else {
-    logger.warn(`lanOnly: WAN access from ip ${req.protocol}://${clientIP} blocked`);
+    log.warn(`lanOnly: WAN access from ip ${req.protocol}://${clientIP} blocked`);
     return res.status(403).json({ message: "No access." });
   }
 };

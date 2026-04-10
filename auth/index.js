@@ -5,13 +5,13 @@ import fs from 'fs-extra';
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import { join } from 'path';
-import { logger } from '../log.js';
+import { log } from '../log.js';
 
 const CASSIS_CONFIG = process.env.CASSIS_CONFIG || "../config";
 fs.ensureDirSync(CASSIS_CONFIG, (error, exists) => {
   if (error) {
-    logger.error(message);
-    if (error.stack) logger.debug(error.stack);
+    log.error(message);
+    if (error.stack) log.debug(error.stack);
     process.exit(1)
   }
 })
@@ -21,16 +21,16 @@ const authfile = join(CASSIS_CONFIG, "jwt.json");
 try {
   if (fs.existsSync(authfile)) {
     JWT = fs.readJsonSync(authfile)
-    logger.info("Authorisation by jwt token");
+    log("Authorisation by jwt token");
   } else {
     JWT.key = generateSecureRandomString(32);
     JWT.duration = "30d";
     fs.writeJsonSync(authfile, JWT);
-    logger.warn("Authorisation by jwt token: New jwt key generated!" + authfile);
+    log.warn("Authorisation by jwt token: New jwt key generated!" + authfile);
   }
 } catch (error) {
   console.error(error);
-  logger.warn("No authorisation installed!");
+  log.warn("No authorisation installed!");
 }
 
 export const JWT_KEY = JWT.key;
@@ -46,12 +46,12 @@ export function verifyAction(req, res) {
 
   if (!token || token === "null") {
     if (verifySignature(req)) {
-      logger.debug("/verify: signature is valid");
+      log.debug("/verify: signature is valid");
       return res.status(200).json({ message: 'Signature is valid' });
     };
     return res.render(join(import.meta.dirname, 'views', 'login'), { first_login: (!fs.existsSync(USERSFILE)) }, function (error, html) {
-      if (error) { logger.error(error); logger.debug(error.stack); return }
-      logger.debug("/verify: No token");
+      if (error) { log.error(error); log.debug(error.stack); return }
+      log.debug("/verify: No token");
       res.status(401).json({ error: 'No token', html: html });
     })
   }
@@ -59,13 +59,13 @@ export function verifyAction(req, res) {
   jwt.verify(token, JWT_KEY, (err, decoded) => {
     if (err) {
       res.render(join(import.meta.dirname, 'views', 'login'), { first_login: (!fs.existsSync(USERSFILE)) }, function (error, html) {
-        if (error) { logger.error(error); logger.debug(error.stack); return }
-        logger.debug("/verify: Invalid token");
+        if (error) { log.error(error); log.debug(error.stack); return }
+        log.debug("/verify: Invalid token");
         res.status(401).json({ error: 'Invalid token', html: html });
       })
 
     } else {
-      logger.debug("/verify: " + decoded.username + ", expire at: " + new Date(decoded.exp * 1000).toLocaleString());
+      log.debug("/verify: " + decoded.username + ", expire at: " + new Date(decoded.exp * 1000).toLocaleString());
       res.status(200).json({ message: 'Token is valid', user: decoded });
     }
   })
@@ -85,13 +85,13 @@ export function loginAction(req, res) {
       if (fs.existsSync(USERSFILE)) {
         users = fs.readJsonSync(USERSFILE);
       } else {
-        logger.warn("loginAction: No users file");
+        log.warn("loginAction: No users file");
         users[username] = password;
         fs.writeJsonSync(USERSFILE, users);
-        logger.info(`User ${username}: Password saved`);
+        log(`User ${username}: Password saved`);
       }
     } catch (error) {
-      logger.error(error);
+      log.error(error);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
@@ -119,7 +119,7 @@ export function loginAction(req, res) {
 
   } catch (err) {
     console.error(err);
-    logger.error(err);
+    log.error(err);
     res.status(500).json({ error: 'Internal server error' });
   };
 };
@@ -129,14 +129,14 @@ function savePasswordAsHash(username, password, users) {
     .then(hash => {
       users[username] = hash;
       fs.writeJsonSync(USERSFILE, users);
-      logger.info(`User ${username}: Password hashed`);
+      log(`User ${username}: Password hashed`);
       return true;
     })
 }
 
 
 export function protect(request, response, next) {
-  //console.log("protect: ", request.path);
+  //log.debug("protect: ", request.path);
   //request.ip, request.connection.remoteAddress);
 
   if ((request.path.startsWith('/cover/')) ||
@@ -147,20 +147,20 @@ export function protect(request, response, next) {
     return next();
   }
   const token = request.headers.authorization?.split(' ')[1];
-  logger.debug("protect: path=" + request.path + "; token=" + token);
+  log.debug("protect: path=" + request.path + "; token=" + token);
 
   if (!token) {
-    logger.info("protect: No Token !!!");
+    log("protect: No Token !!!");
     return response.status(401).json({ error: 'No Authorisation' });
   }
 
   jwt.verify(token, JWT_KEY, (err, decoded) => {
     if (err) {
-      logger.info("protect: No Authorisation!");
+      log("protect: No Authorisation!");
       response.status(401).json({ error: 'No Authorisation' });
 
     } else {
-      logger.debug("protect: Authorisation ok! - " + decoded.username + ", expires at: " + new Date(decoded.exp * 1000).toLocaleString());
+      log.debug("protect: Authorisation ok! - " + decoded.username + ", expires at: " + new Date(decoded.exp * 1000).toLocaleString());
       request.userId = decoded.username;
       next();
     }
@@ -200,10 +200,10 @@ export function verifySignature(req) {
       .update(`${identifier}:${expires}`)
       .digest('hex');
 
-    //logger.debug("verifySignature: Book " + identifier + " expires at: " + expDate.toLocaleString());
+    //log.debug("verifySignature: Book " + identifier + " expires at: " + expDate.toLocaleString());
     return signature === expectedSignature && Date.now() < parseInt(expires, 10);
   } catch (error) {
-    logger.error("verifySignature: " + error);
+    log.error("verifySignature: " + error);
     return false;
   }
 };

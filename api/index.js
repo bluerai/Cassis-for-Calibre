@@ -1,7 +1,7 @@
 //apiRouter
 
 import { Router } from 'express';
-import { logger } from '../log.js';
+import { log } from '../log.js';
 import { connectDb, unconnectDb, countBooks, searchForBooks } from '../app/model.js';
 
 export const apiRouter = Router();
@@ -17,7 +17,7 @@ apiRouter.get('/unconnectdb', dbAction);
 
 export async function countAction(request, response) {
   try {
-    logger.debug("countAction: request.query=" + JSON.stringify(request.query));
+    log.debug("countAction: request.query=" + JSON.stringify(request.query));
     const searchString = request.query.search || "";
     const count = countBooks(searchString);
     response.json({ count, healthy: true });
@@ -27,7 +27,7 @@ export async function countAction(request, response) {
 
 export async function searchAction(request, response) {
   try {
-    logger.debug("searchAction: request.query=" + JSON.stringify(request.query));
+    log.debug("searchAction: request.query=" + JSON.stringify(request.query));
     const searchString = request.query.search || "";
     const books = searchForBooks(searchString, 100);
     response.json({ books });
@@ -38,15 +38,15 @@ export async function searchAction(request, response) {
 
 export async function healthAction(request, response) {
   try {
-    logger.debug("healthAction");
+    log.debug("healthAction");
     const count = countBooks().length;
-    logger.debug(request.protocol + "-Server still healthy!");
+    log.debug(request.protocol + "-Server still healthy!");
     response.json({ healthy: true, count });
   }
   catch (error) {
     const message = "Cassis: Error on " + request.protocol + "-Server: " + error.message;
-    logger.error(message);
-    if (error.stack) logger.debug(error.stack);
+    log.error(message);
+    if (error.stack) log.debug(error.stack);
     if (response) {
       response.json({ healthy: false, error: error.message });
     }
@@ -55,7 +55,7 @@ export async function healthAction(request, response) {
 
 export async function dbAction(request, response) {
   try {
-    logger.debug("dbAction: request.url=" + request.url);
+    log.debug("dbAction: request.url=" + request.url);
     const result = (request.url === "/unconnectdb") ? unconnectDb() : connectDb();
     response.json(result);
   }

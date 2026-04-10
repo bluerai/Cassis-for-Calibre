@@ -2,12 +2,12 @@
 
 import Database from 'better-sqlite3';
 import fs from 'fs-extra';
-import { logger } from '../log.js';
+import { log } from '../log.js';
 
 const CASSIS_METADATA = process.env.CASSIS_METADATA || process.env.HOME + "/Documents/Calibre/metadata.db"
 
 if (!fs.existsSync(CASSIS_METADATA)) {
-  logger.error("Calibre-Datenbank nicht gefunden im Pfad: " + CASSIS_METADATA);
+  log.error("Calibre-Datenbank nicht gefunden im Pfad: " + CASSIS_METADATA);
   process.exit(1);
 }
 
@@ -17,7 +17,7 @@ let COVERDATA_STMT;
 function initDb() {
   if (!METADATA_DB) {
     METADATA_DB = new Database(CASSIS_METADATA, { readonly: true });
-    logger.info("Connected to Calibre Database at " + CASSIS_METADATA);
+    log("Connected to Calibre Database at " + CASSIS_METADATA);
   }
 }
 
@@ -169,7 +169,7 @@ function searchStringToArray(searchString) {
 
 function searchClause(searchString) {
   const searchArray = searchStringToArray(searchString);
-  logger.silly("searchClause: searchString=" + searchString + ", searchArray=" + searchArray);
+  log.silly("searchClause: searchString=" + searchString + ", searchArray=" + searchArray);
 
   if (searchArray && searchArray.length > 0) {
     let clause = "";
@@ -484,7 +484,7 @@ export function connectDb() {  // open database
   try {
     initDb();
     if (!COVERDATA_STMT) COVERDATA_STMT = METADATA_DB.prepare(queryCoverData);
-    logger.info("connectDb: DB opened");
+    log("connectDb: DB opened");
     return { state: true, msg: "Calibre Database connected." }
   } catch (error) {
     return { state: false, msg: error.message };
@@ -497,7 +497,7 @@ export function unconnectDb() {  // close database
       METADATA_DB.close();
       METADATA_DB = null;
       COVERDATA_STMT = null;
-      logger.warn("unconnectDb: DB closed");
+      log.warn("unconnectDb: DB closed");
     }
     return { state: true, msg: "Calibre Database closed" }
   } catch (error) {
@@ -506,7 +506,7 @@ export function unconnectDb() {  // close database
 }
 
 export function findBooks(searchString, sortString, limit, offset) {
-  logger.debug("findBooks: searchString=" + searchString + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
+  log.debug("findBooks: searchString=" + searchString + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
   try {
     const selectAllStmt = METADATA_DB.prepare(findBooksQuery(searchString, sortString));
     return selectAllStmt.all(limit, offset);
@@ -515,16 +515,16 @@ export function findBooks(searchString, sortString, limit, offset) {
 
 
 export function searchForBooks(searchString, limit=25) {
-  logger.debug(`searchForBooks: searchString=${searchString}, limit=${limit}`);
+  log.debug(`searchForBooks: searchString=${searchString}, limit=${limit}`);
   try {
-    console.log(searchForBooksQuery(searchString, limit));
+    log.debug(searchForBooksQuery(searchString, limit));
     const selectAllStmt = METADATA_DB.prepare(searchForBooksQuery(searchString, limit));
     return selectAllStmt.all(limit);
   } catch (error) { errorLogger(error); return [] }
 }
 
 export function countBooks(searchString) {
-  logger.debug("countBooks: searchString=" + searchString);
+  log.debug("countBooks: searchString=" + searchString);
   try {
     const selectOneStmt = METADATA_DB.prepare(countBooksQuery(searchString));
     return selectOneStmt.get().count;
@@ -532,7 +532,7 @@ export function countBooks(searchString) {
 }
 
 export function findBooksWithTags(searchString, sortString, tagIdString, limit, offset) {
-  logger.debug("findBooksWithTags: searchString=" + searchString + ", sortString=" + sortString + ", tagIdString=" + tagIdString + ", limit=" + limit + ", offset=" + offset);
+  log.debug("findBooksWithTags: searchString=" + searchString + ", sortString=" + sortString + ", tagIdString=" + tagIdString + ", limit=" + limit + ", offset=" + offset);
   try {
     const selectAllStmt = METADATA_DB.prepare(findBooksWithTagsQuery(searchString, sortString, tagIdString));
     return selectAllStmt.all(limit, offset);
@@ -540,7 +540,7 @@ export function findBooksWithTags(searchString, sortString, tagIdString, limit, 
 }
 
 export function countBooksWithTags(searchString, tagIdString) {
-  logger.debug("countBooksWithTags: searchString=" + searchString + ", tagIdString=" + tagIdString);
+  log.debug("countBooksWithTags: searchString=" + searchString + ", tagIdString=" + tagIdString);
   try {
     const selectOneStmt = METADATA_DB.prepare(countBooksWithTagsQuery(searchString, tagIdString));
     return selectOneStmt.get().count;
@@ -548,7 +548,7 @@ export function countBooksWithTags(searchString, tagIdString) {
 }
 
 export function findBooksWithCC(ccNum, searchString, sortString, ccIdString, limit, offset) {
-  logger.debug("findBooksWithCC: ccNum=" + ccNum + ", searchString=" + searchString + ", sortString=" + sortString + ", ccIdString=" + ccIdString + ", limit=" + limit + ", offset=" + offset);
+  log.debug("findBooksWithCC: ccNum=" + ccNum + ", searchString=" + searchString + ", sortString=" + sortString + ", ccIdString=" + ccIdString + ", limit=" + limit + ", offset=" + offset);
   try {
     const selectAllStmt = METADATA_DB.prepare(findBooksWithCCQuery(ccNum, searchString, sortString, ccIdString));
     return selectAllStmt.all(limit, offset);
@@ -556,7 +556,7 @@ export function findBooksWithCC(ccNum, searchString, sortString, ccIdString, lim
 }
 
 export function countBooksWithCC(ccNum, searchString, ccIdString) {
-  logger.debug("countBooksWithCC: ccNum=" + ccNum + ", searchString=" + searchString + ", ccIdString=" + ccIdString);
+  log.debug("countBooksWithCC: ccNum=" + ccNum + ", searchString=" + searchString + ", ccIdString=" + ccIdString);
   try {
     const selectOneStmt = METADATA_DB.prepare(countBooksWithCCQuery(ccNum, searchString, ccIdString));
     return selectOneStmt.get().count;
@@ -566,7 +566,7 @@ export function countBooksWithCC(ccNum, searchString, ccIdString) {
 //====
 
 export function findBooksBySerie(seriesId, sortString, limit, offset) {
-  logger.debug("findBooksBySerie: seriesId=" + seriesId + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
+  log.debug("findBooksBySerie: seriesId=" + seriesId + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
   try {
     const selectAllStmt = METADATA_DB.prepare(findBooksBySerieQuery(sortString));
     return selectAllStmt.all(seriesId, limit, offset);
@@ -581,7 +581,7 @@ export function countBooksBySerie(seriesId) {
 }
 
 export function findBooksByAuthor(authorsId, sortString, limit, offset) {
-  logger.debug("findBooksByAuthor: authorsId=" + authorsId + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
+  log.debug("findBooksByAuthor: authorsId=" + authorsId + ", sortString=" + sortString + ", limit=" + limit + ", offset=" + offset);
   try {
     const selectAllStmt = METADATA_DB.prepare(findBooksByAuthorQuery(sortString));
     return selectAllStmt.all(authorsId, limit, offset);
@@ -671,7 +671,7 @@ export function getCoverData(bookId) {
   } catch (error) {
     if (error.code === "ERR_INVALID_STATE") {
       try {
-        logger.warn("*** getCoverData: re-prepared global STMT");
+        log.warn("*** getCoverData: re-prepared global STMT");
         COVERDATA_STMT = METADATA_DB.prepare(queryCoverData);
         return COVERDATA_STMT.get(bookId);
       } catch (error) { errorLogger(error); return null; }
@@ -719,7 +719,7 @@ export function getPublishersStatistics() {
 // =============================================
 
 function errorLogger(error, message) {
-  logger.error(message);
-  if (error.stack) logger.debug(error.stack);
+  log.error(message);
+  if (error.stack) log.debug(error.stack);
 }
 
