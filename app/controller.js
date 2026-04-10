@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { join } from 'path';
 
 import { createSignature, verifySignature } from '../auth/index.js'
-import { logger, consoleTransport, fileTransport, errorLogger, log_levels } from '../log.js';
+import { logger, consoleTransport, fileTransport, log_levels } from '../log.js';
 
 const packagejson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -28,13 +28,21 @@ const PAGE_LIMIT = parseInt(process.env.PAGE_LIMIT) || 48;
 // Bookdir einrichten:
 logger.info("Calibre e-book directory found at " + CASSIS_BOOKS);
 fs.existsSync(CASSIS_BOOKS, (error, exists) => {
-  if (error) { errorLogger(error); process.exit(1) }
+  if (error) {
+    logger.error(message);
+    if (error.stack) logger.debug(error.stack);
+    process.exit(1)
+  }
 })
 
 // Image-Cache einrichten:
 logger.info("Cache for bookcovers found at " + CASSIS_CACHE);
 fs.ensureDirSync(CASSIS_CACHE, (error, exists) => {
-  if (error) { errorLogger(error); process.exit(1) }
+  if (error) {
+    logger.error(message);
+    if (error.stack) logger.debug(error.stack);
+    process.exit(1)
+  }
 })
 
 // Base functions ***********************
@@ -533,7 +541,8 @@ function decode(str) {
 
 function errorHandler(error, response, actionName) {
   const message = "CASSIS: Fehler in '" + actionName + "': " + error.message;
-  errorLogger(error, message);
+  logger.error(message);
+  if (error.stack) logger.debug(error.stack);
   if (response) { // 500 Internal Server Error
     response.status(500).json({ message: message });
   }

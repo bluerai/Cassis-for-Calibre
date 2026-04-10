@@ -2,7 +2,7 @@
 
 import Database from 'better-sqlite3';
 import fs from 'fs-extra';
-import { logger, errorLogger } from '../log.js';
+import { logger } from '../log.js';
 
 const CASSIS_METADATA = process.env.CASSIS_METADATA || process.env.HOME + "/Documents/Calibre/metadata.db"
 
@@ -713,5 +713,13 @@ export function getPublishersStatistics() {
   try {
     return METADATA_DB.prepare(queryPublisherCounts).all();
   } catch (error) { errorLogger(error); return []; }
+}
+
+
+// =============================================
+
+function errorLogger(error, message) {
+  logger.error(message);
+  if (error.stack) logger.debug(error.stack);
 }
 

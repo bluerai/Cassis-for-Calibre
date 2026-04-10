@@ -10,7 +10,7 @@ import { join } from 'path';
 import { verifyAction, loginAction, protect } from './auth/index.js';
 import { appRouter } from './app/index.js';
 import { apiRouter } from './api/index.js';
-import { logger } from './log.js';
+import { logger, log} from './log.js';
 
 const app = express();
 const HTTP_PORT = parseInt(process.env.HTTP_PORT) || 80;
@@ -24,15 +24,13 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(express.json());
 
-app.use(morgan('common', {
-  immediate: true,
-  skip: (req, res) => req.url.startsWith('/app/cover')
+app.use(morgan('short', {
+  stream: {
+    write: (message) => {
+      (!message.includes(' /app/cover/')) && log(message.trim())
+    }
+  }
 }));
-/* 'tiny': Gibt minimale Informationen aus(z.B.GET / 200 10 - 1.234 ms).
-'combined': Gibt detaillierte Informationen im Apache - Combined - Format aus.
-'common': Gibt Informationen im Apache - Common - Format aus.
-'dev': Farbige Ausgabe für die Entwicklung(Statuscodes werden farblich hervorgehoben).
-'short': Kürzere Ausgabe als 'common'. */
 
 app.get('/verify', verifyAction);
 

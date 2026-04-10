@@ -9,7 +9,11 @@ import { logger } from '../log.js';
 
 const CASSIS_CONFIG = process.env.CASSIS_CONFIG || "../config";
 fs.ensureDirSync(CASSIS_CONFIG, (error, exists) => {
-  if (error) { errorLogger(error); process.exit(1) }
+  if (error) {
+    logger.error(message);
+    if (error.stack) logger.debug(error.stack);
+    process.exit(1)
+  }
 })
 
 export let JWT = {};

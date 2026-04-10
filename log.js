@@ -8,12 +8,16 @@ export const log_levels = ['error', 'warn', 'info', 'debug', 'silly'];
 
 const { combine, timestamp, printf, colorize } = winston.format;
 
-const LOGDIR = process.env.LOGDIR || "./dev_data/logs";
-const consoleSilent = !(process.env.LOG_TO_CONSOLE !== "false") || false;
-const fileSilent = !(process.env.LOG_TO_FILE !== "false") || true;
+const logdir = process.env.LOGDIR || "./dev_data/logs";
+const consoleSilent = (process.env.LOG_TO_CONSOLE === "false") ? true : false;
+const fileSilent = (process.env.LOG_TO_FILE === "true") ? false : true;
 
-fs.ensureDirSync(LOGDIR, (error, exists) => {
-  if (error) { errorLogger(error); process.exit(1) }
+fs.ensureDirSync(logdir, (error, exists) => {
+  if (error) {
+    logger.error(message);
+    if (error.stack) logger.debug(error.stack);
+    process.exit(1)
+  }
 })
 
 export const consoleTransport = new winston.transports.Console({
@@ -22,7 +26,7 @@ export const consoleTransport = new winston.transports.Console({
 });
 
 export const fileTransport = new winston.transports.DailyRotateFile({
-  filename: LOGDIR + '/full_%DATE%.log',
+  filename: logdir + '/full_%DATE%.log',
   datePattern: 'YYYY-MM-DD',
   maxFiles: '14d',
   lazy: true,
@@ -41,10 +45,30 @@ export const logger = winston.createLogger({
   ],
 });
 
-logger.info("Logging level: " + logger.level + ", logging to console: " + !consoleTransport.silent + ", logging to file: " + !fileTransport.silent);
+log_levels.forEach(level => {
+  const original = logger[level].bind(logger);
 
-export function errorLogger(error, message) {
-  logger.error(message);
-  if (error.stack) logger.debug(error.stack);
-}
+  logger[level] = (...args) => {
+    /* const message = util.format(...args); */
+    const message = args.map(arg =>
+      typeof arg === 'object'
+        ? util.inspect(arg, { depth: null, colors: true })
+        : arg
+    ).join(' ');
+    original(message);
+  };
+});
 
+export function log(...args) { logger.info(...args); }
+log.info = (...args) => logger.info(...args);
+log.warn = (...args) => logger.warn(...args);
+log.error = (...args) => logger.error(...args);
+log.debug = (...args) => logger.debug(...args);
+log.silly = (...args) => logger.silly(...args);
+
+logger.info(
+  `Logging at level '${logger.level}'`,
+  (consoleTransport.silent) ? "" : "to console",
+  (!consoleTransport.silent && !fileTransport.silent) ? "and" : "",
+  (fileTransport.silent) ? "" : "to file"
+);
