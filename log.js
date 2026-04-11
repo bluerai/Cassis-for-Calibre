@@ -105,6 +105,8 @@ log.debug = (...args) => logger.debug(...args);
 log.silly = (...args) => logger.silly(...args);
 log.http = (...args) => logger.http(...args);
 
+log.http = (arg0, ...args) => log.info('\x1b[32m\x1b[1m' + arg0, ...args)
+
 log.isLevelEnabled = (...args) => logger.isLevelEnabled(...args);
 
 log(

@@ -10,7 +10,7 @@ import { join } from 'path';
 import { verifyAction, loginAction, protect } from './auth/index.js';
 import { appRouter } from './app/index.js';
 import { apiRouter } from './api/index.js';
-import { log} from './log.js';
+import { log } from './log.js';
 
 const app = express();
 const HTTP_PORT = parseInt(process.env.HTTP_PORT) || 80;
@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(morgan('short', {
   stream: {
     write: (message) => {
-      (!message.includes(' /app/cover/')) && log('\x1b[32m' + message.trim())
+      (!message.includes(' /app/cover/')) && log.http(message.trim().replace('::ffff:', ''))
     }
   }
 }));
