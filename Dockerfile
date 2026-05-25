@@ -1,6 +1,5 @@
-FROM node:lts-alpine3.22
+FROM node:lts-alpine3.23
 RUN apk add tzdata
-RUN apk add curl
 
 RUN mkdir -p /app;\
   mkdir -p /home/node/apphome;\
@@ -26,7 +25,7 @@ ENV CASSIS_LOGS=/app/logs
 ENV CASSIS_KEYFILE=key.pem
 ENV CASSIS_CERTFILE=cert.pem
 
-HEALTHCHECK --interval=60m --timeout=5s --retries=3 \
-  CMD ["sh", "healthcheck.sh"]
+HEALTHCHECK --interval=60m --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:80/api/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"
 
 CMD [ "node", "server.js" ]

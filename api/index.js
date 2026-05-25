@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import { log } from '../log.js';
+import { pushover } from '../pushover.js';
 import { connectDb, unconnectDb, countBooks, searchForBooks } from '../app/model.js';
 
 export const apiRouter = Router();
@@ -35,20 +36,21 @@ export async function searchAction(request, response) {
   catch (error) { errorHandler(error, response, 'findAction') }
 }
 
-
-export async function healthAction(request, response) {
+async function healthAction(request, response) {
   try {
-    log.debug("healthAction");
-    const count = countBooks().length;
-    log.debug(request.protocol + "-Server still healthy!");
-    response.json({ healthy: true, count });
+    //log.debug("healthAction");
+    const count = countBooks();
+
+    log.debug(`healthAction: ${request.protocol}-Server still healthy! (${count})`);
+    response.status(200).json({ healthy: true, count });
   }
   catch (error) {
     const message = "Cassis: Error on " + request.protocol + "-Server: " + error.message;
     log.error(message);
+    pushover.syserror(message, "UNHEALTHY: Cassis");
     if (error.stack) log.debug(error.stack);
     if (response) {
-      response.json({ healthy: false, error: error.message });
+      response.status(500).json({ healthy: false, error: error.message });
     }
   }
 }
