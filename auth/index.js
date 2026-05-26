@@ -8,6 +8,7 @@ import { join } from 'path';
 import { log } from '../log.js';
 
 const CASSIS_CONFIG = process.env.CASSIS_CONFIG || "../config";
+
 fs.ensureDirSync(CASSIS_CONFIG, (error, exists) => {
   if (error) {
     log.error(message);

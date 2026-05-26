@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { log } from './log.js';
 import path from 'path';
 
-const messagingfile = path.join(path.resolve(process.env.DATADIR || './data'), 'config', 'pushover.json');
+const messagingfile = path.join(process.env.CASSIS_CONFIG, 'pushover.json');
 
 class PushMessage {
   constructor(credentials) {

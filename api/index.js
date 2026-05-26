@@ -38,14 +38,13 @@ export async function searchAction(request, response) {
 
 async function healthAction(request, response) {
   try {
-    //log.debug("healthAction");
     const count = countBooks();
-
-    log.debug(`healthAction: ${request.protocol}-Server still healthy! (${count})`);
+    const message = `healthAction: ${request.protocol}-Server still healthy! (${count})`;
+    log.info(message);
     response.status(200).json({ healthy: true, count });
   }
   catch (error) {
-    const message = "Cassis: Error on " + request.protocol + "-Server: " + error.message;
+    const message = `Cassis: Error on ${request.protocol}-Server: ${error.message}`;
     log.error(message);
     pushover.syserror(message, "UNHEALTHY: Cassis");
     if (error.stack) log.debug(error.stack);
