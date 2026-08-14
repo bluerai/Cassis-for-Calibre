@@ -13,8 +13,9 @@
   "license": "MIT",
   "dependencies": {
     "argon2": "^0.41.1",
+    "better": "^0.1.0",
     "better-sqlite3": "^12.6.2",
-    "brace-expansion": "^5.0.4",
+    "brace-expansion": "^5.0.9",
     "express": "^4.21.1",
     "fs-extra": "^11.2.0",
     "jsonwebtoken": "^9.0.3",
@@ -27,5 +28,9 @@
     "string-length": "^7.0.1",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
+  },
+  "allowScripts": {
+    "argon2@0.41.1": true,
+    "better-sqlite3@12.6.2": true
   }
 }
