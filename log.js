@@ -2,6 +2,7 @@
 
 import winston from 'winston';
 import 'winston-daily-rotate-file';
+import util from 'util';
 import fs from 'fs-extra';
 import stringLength from 'string-length';
 

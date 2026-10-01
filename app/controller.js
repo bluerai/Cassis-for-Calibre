@@ -11,7 +11,7 @@ const packagejson = JSON.parse(fs.readFileSync(new URL('../package.json', import
 
 import {
   findBooks, countBooks, findBooksWithTags, countBooksWithTags, findBooksWithCC, countBooksWithCC, findBooksBySerie, countBooksBySerie,
-  findBooksByAuthor, countBooksByAuthor, getSeriesOfBooks, getAuthorsOfBooks, getFormatsOfBooks, getPublisherOfBooks, getTagsOfBooks, getBook,
+  findBooksByAuthor, countBooksByAuthor, getSeriesOfBooks, getAuthorsOfBooks, getFormatsOfBooks, getPublishersOfBooks, getTagsOfBooks, getBook,
   getCoverData, getFileData, getStatistics, connectDb, unconnectDb, getCustomColumnOfBooks, getTags, getCustomColumns, getTagsStatistics,
   getAuthorsStatistics, getSeriesStatistics, getPublishersStatistics
 } from './model.js';
@@ -96,6 +96,26 @@ function addFields(books) {
 
   }
   return (books);
+}
+
+function sqlTimestampToDate(sqlTimestamp) {
+  // "2026-09-28 15:55:01.269877+00:00" → nur die relevanten Teile
+  const [datePart, timePart] = sqlTimestamp.split(' ');
+  const [y, m, d] = datePart.split('-').map(Number);
+
+  // Uhrzeit inkl. Zeitzone parsen (ohne Mikrosekunden)
+  const time = timePart.replace(/(\.\d{3})\d+/, '$1'); // "15:55:01.269+00:00"
+  const utcDate = new Date(`${datePart}T${time}`);
+
+  // Nach deutscher Zeit umrechnen
+  const berlinStr = utcDate.toLocaleDateString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+
+  return berlinStr;
 }
 
 // Actions **************************
@@ -201,8 +221,10 @@ export async function bookAction(request, response) {
       author.authorsName = decode(author.authorsName); return author
     });
 
-    const publisher = getPublisherOfBooks(bookId);
-    if (publisher) { publisher.name = decode(publisher.name); book.publisher = publisher }
+    const publishers = getPublishersOfBooks(bookId);
+    if (publishers.length != 0) { book.publisherName = decode(publishers[0].name) }
+
+   //book.inStockDateString = sqlTimestampToDate(book.timestamp);
 
     const tags = getTagsOfBooks(bookId);
     for (let t in tags) {
@@ -219,7 +241,7 @@ export async function bookAction(request, response) {
 
     book.signature = createSignature(book.bookId, 1800);
 
-    response.render(join(import.meta.dirname, 'views', 'book'), { book }, function (error, html) {
+    response.render(join(import.meta.dirname, 'views', 'book'), { book, sqlTimestampToDate }, function (error, html) {
       if (error) {
         errorHandler(error, response, 'render book page');
       } else {

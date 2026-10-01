@@ -45,10 +45,11 @@
 
             if !book.comment
               h3(style="margin-top:30px")
-                if book.publisher
-                  span #{book.publisher.name}
-                if book.pubdate
-                  span=" (" + book.pubdate.substr(0,4) + ")"
+                p.center(style="font-weight: 700")=book.publisherName
+                if book.pubdate & book.pubdate < book.timestamp
+                  p.center="Erschienen: " + sqlTimestampToDate(book.pubdate)
+                if book.timestamp
+                  p.center="Im Bestand seit: " + sqlTimestampToDate(book.timestamp)
 
       if book.comment
         .columnspace
@@ -56,12 +57,13 @@
         .bookcolumn
           #bookcontent
             h4 Inhalt
-            p !{book.comment} 
-            h3.center
-              if book.publisher
-                span #{book.publisher.name}
-              if book.pubdate
-                span=" (" + book.pubdate.substr(0,4) + ")" 
+            p !{book.comment}
+            h3(style="margin-top:30px")
+              p.center(style="font-weight: 700")=book.publisherName
+              if book.pubdate & book.pubdate < book.timestamp
+                p.center="Erschienen: " + sqlTimestampToDate(book.pubdate)
+              if book.timestamp
+                p.center="Im Bestand seit: " + sqlTimestampToDate(book.timestamp)
 
   h3#footer
     .tag

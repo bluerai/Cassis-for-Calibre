@@ -630,7 +630,7 @@ export function getTagsOfBooks(bookIdString) {
   } catch (error) { errorLogger(error); return []; }
 }
 
-export function getPublisherOfBooks(bookIdString) {
+export function getPublishersOfBooks(bookIdString) {
   try {
     const selectOneStmt = METADATA_DB.prepare(queryPublisherOfBook(bookIdString));
     return selectOneStmt.all();
